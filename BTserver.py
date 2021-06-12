@@ -1,8 +1,11 @@
 import bluetooth
 import RPi.GPIO as GPIO
 import os
+import subprocess
+from subprocess import Popen
 
 GPIO.setmode(GPIO.BOARD) #setup
+GPIO.setwarnings(False)
 GPIO.setup(11, GPIO.OUT)
 GPIO.setup(13, GPIO.OUT)
 GPIO.setup(16, GPIO.OUT)
@@ -13,11 +16,19 @@ bck = GPIO.PWM(11, 100)
 left = GPIO.PWM(18, 100)
 right = GPIO.PWM(16, 100)
 
+def startCamera():
+    subprocess.Popen(['./mjpg-streamer.sh start'], shell=True, cwd="/home/pi/mjpg-streamer")
+    
+def stopCamera():
+    subprocess.Popen(['./mjpg-streamer.sh stop'], shell=True, cwd="/home/pi/mjpg-streamer")
+    
 def restart():
     fwd.stop()
     bck.stop()
     left.stop()
     right.stop()
+    
+    startCamera()
 
     server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
     server_sock.bind(("", bluetooth.PORT_ANY))
@@ -61,7 +72,7 @@ def restart():
                         left.stop()
             print("Received", data)
     except bluetooth.btcommon.BluetoothError:
-        print("Disconnected. Reloading program")
+        print("Bluetooth connection lost!. Reloading program...")
         client_sock.close()
         server_sock.close()
         restart()
