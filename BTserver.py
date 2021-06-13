@@ -5,6 +5,7 @@ import subprocess
 from subprocess import Popen
 import asyncio
 import select
+import time
 
 GPIO.setmode(GPIO.BOARD) #setup
 GPIO.setwarnings(False)
@@ -30,6 +31,55 @@ def startCamera():
     
 def stopCamera():
     subprocess.Popen(['./mjpg-streamer.sh stop'], shell=True, cwd="/home/pi/mjpg-streamer")
+
+def sayNo():
+    left.start(90)
+    time.sleep(0.2)
+    left.stop()
+    right.start(90)
+    time.sleep(0.2)
+    right.stop()
+    
+    left.start(90)
+    time.sleep(0.2)
+    left.stop()
+    right.start(90)
+    time.sleep(0.2)
+    right.stop()
+
+def flash():
+    fwd.start(90)
+    time.sleep(0.3)
+    fwd.stop()
+    fwd.start(0.3)
+    fwd.stop()
+    
+def goCrazy():
+    fwd.start(90)
+    time.sleep(1)
+    fwd.stop()
+    
+    bck.start(90)
+    time.sleep(0.3)
+    bck.stop()
+    fwd.start(90)
+    time.sleep(0.3)
+    bck.start(90)
+    time.sleep(0.3)
+    bck.stop()
+    
+    bck.start(90)
+    time.sleep(0.3)
+    bck.stop()
+    fwd.start(90)
+    time.sleep(0.3)
+    bck.start(90)
+    time.sleep(0.3)
+    bck.stop()
+    
+    sayNo()
+    flash()
+    
     
 def restart():
     fwd.stop()
@@ -85,6 +135,18 @@ def restart():
                         left.start(90)
                     elif data == 'l'.encode():
                         left.stop()
+                    elif data == 'No'.encode(): #say no
+                        sayNo()
+                    elif data == 'Fl'.encode(): #Flash the lights
+                        flash()
+                    elif data == 'Cr'.encode(): #Go crazy
+                        goCrazy()
+                    elif data == 'LA'.encode(): #Look around
+                        print ("Look around not implemented")
+                    elif data == 'LS'.encode(): # Lightshow
+                        print ("Lightshow not implemented")
+                    elif data == 'SP'.encode(): # Spin
+                        print ("Spin not implemented")                        
                 print("Received", data)
             else:
                 fwd.stop()
