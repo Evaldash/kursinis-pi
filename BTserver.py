@@ -4,6 +4,7 @@ import os
 import subprocess
 from subprocess import Popen
 import asyncio
+import select
 
 GPIO.setmode(GPIO.BOARD) #setup
 GPIO.setwarnings(False)
@@ -29,14 +30,6 @@ def startCamera():
     
 def stopCamera():
     subprocess.Popen(['./mjpg-streamer.sh stop'], shell=True, cwd="/home/pi/mjpg-streamer")
-    
-async def ResetFwdIfTimeout():
-    initial_fwd_count = fwd_command_count
-    await asyncio.sleep(timeout)
-    newer_fwd_count = fwd_command_count
-    
-    if (initial_fwd_count == newer_fwd_count):
-         fwd.stop()
     
 def restart():
     fwd.stop()
@@ -65,33 +58,39 @@ def restart():
     try:
         fwd_command_count=0
         bck_command_count=0
+        client_sock.setblocking(0)
         while True:
-            data = client_sock.recv(1024)
-
-            if not data:
-                GPIO.cleanup()
-                break
-            if data:
-                if data == 'U'.encode(): #up start
-                    fwd.start(80)
-                elif data == 'u'.encode():
-                    fwd.stop()
-                elif data == 'D'.encode(): #down start
-                    bck_command_count+=1
-                    bck.start(80)
-                elif data == 'd'.encode():
-                    bck.stop()
-                elif data == 'R'.encode():
-                    right.start(90)
-                elif data == 'r'.encode(): #right stop
-                    right.stop()
-                elif data == 'L'.encode():
-                    left.start(90)
-                elif data == 'l'.encode():
-                    left.stop()
-            print("Received", data)
-            ResetFwdIfTimeout()
-            
+            ready = select.select([client_sock], [], [], 2)
+            if ready[0]:
+                data = client_sock.recv(1024)
+    
+                if not data:
+                    GPIO.cleanup()
+                    break
+                if data:
+                    if data == 'U'.encode(): #up start
+                        fwd.start(80)
+                    elif data == 'u'.encode():
+                        fwd.stop()
+                    elif data == 'D'.encode(): #down start
+                        bck_command_count+=1
+                        bck.start(80)
+                    elif data == 'd'.encode():
+                        bck.stop()
+                    elif data == 'R'.encode():
+                        right.start(90)
+                    elif data == 'r'.encode(): #right stop
+                        right.stop()
+                    elif data == 'L'.encode():
+                        left.start(90)
+                    elif data == 'l'.encode():
+                        left.stop()
+                print("Received", data)
+            else:
+                fwd.stop()
+                bck.stop()
+                right.stop()
+                left.stop()
             
     except bluetooth.btcommon.BluetoothError:
         print("Bluetooth connection lost!. Reloading program...")
