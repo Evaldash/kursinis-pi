@@ -33,54 +33,68 @@ def stopCamera():
     subprocess.Popen(['./mjpg-streamer.sh stop'], shell=True, cwd="/home/pi/mjpg-streamer")
 
 def sayNo():
-    left.start(90)
+    left.start(100)
     time.sleep(0.2)
     left.stop()
-    right.start(90)
+    right.start(100)
     time.sleep(0.2)
     right.stop()
     
-    left.start(90)
+    left.start(100)
     time.sleep(0.2)
     left.stop()
-    right.start(90)
+    right.start(100)
     time.sleep(0.2)
     right.stop()
-
-def flash():
-    fwd.start(90)
-    time.sleep(0.3)
-    fwd.stop()
-    fwd.start(0.3)
-    fwd.stop()
     
-def goCrazy():
-    fwd.start(90)
+def surpriseMe():
+    fwd.start(100)
     time.sleep(1)
     fwd.stop()
     
-    bck.start(90)
-    time.sleep(0.3)
-    bck.stop()
-    fwd.start(90)
-    time.sleep(0.3)
-    bck.start(90)
+    bck.start(100)
     time.sleep(0.3)
     bck.stop()
     
-    bck.start(90)
+    fwd.start(100)
+    time.sleep(0.3)
+    fwd.stop()
+    
+    bck.start(100)
     time.sleep(0.3)
     bck.stop()
-    fwd.start(90)
+    
+    bck.start(100)
     time.sleep(0.3)
-    bck.start(90)
+    bck.stop()
+    
+    fwd.start(100)
+    time.sleep(0.3)
+    fwd.stop()
+    
+    bck.start(100)
     time.sleep(0.3)
     bck.stop()
     
     sayNo()
-    flash()
+    sayNo()
     
+def sayYes():
+    fwd.start(100)
+    time.sleep(0.5)
+    fwd.stop()
     
+    bck.start(100)
+    time.sleep(0.5)
+    bck.stop()
+    
+def lookAround():
+    fwd.start(100)
+    left.start(100)
+    time.sleep(3)
+    fwd.stop()
+    left.stop()
+
 def restart():
     fwd.stop()
     bck.stop()
@@ -106,47 +120,39 @@ def restart():
     client_sock, client_info = server_sock.accept()
     print("Accepted connection from", client_info)
     try:
-        fwd_command_count=0
-        bck_command_count=0
         client_sock.setblocking(0)
         while True:
             ready = select.select([client_sock], [], [], 2)
             if ready[0]:
                 data = client_sock.recv(1024)
-    
                 if not data:
                     GPIO.cleanup()
                     break
                 if data:
                     if data == 'U'.encode(): #up start
-                        fwd.start(80)
+                        fwd.start(100)
                     elif data == 'u'.encode():
                         fwd.stop()
                     elif data == 'D'.encode(): #down start
-                        bck_command_count+=1
-                        bck.start(80)
+                        bck.start(100)
                     elif data == 'd'.encode():
                         bck.stop()
                     elif data == 'R'.encode():
-                        right.start(90)
+                        right.start(100)
                     elif data == 'r'.encode(): #right stop
                         right.stop()
                     elif data == 'L'.encode():
-                        left.start(90)
+                        left.start(100)
                     elif data == 'l'.encode():
                         left.stop()
                     elif data == 'No'.encode(): #say no
                         sayNo()
-                    elif data == 'Fl'.encode(): #Flash the lights
-                        flash()
-                    elif data == 'Cr'.encode(): #Go crazy
-                        goCrazy()
+                    elif data == 'Sr'.encode(): #Surprise me
+                        surpriseMe()
                     elif data == 'LA'.encode(): #Look around
-                        print ("Look around not implemented")
-                    elif data == 'LS'.encode(): # Lightshow
-                        print ("Lightshow not implemented")
-                    elif data == 'SP'.encode(): # Spin
-                        print ("Spin not implemented")                        
+                        lookAround()
+                    elif data == 'Yes'.encode(): # Spin
+                        sayYes()                        
                 print("Received", data)
             else:
                 fwd.stop()
