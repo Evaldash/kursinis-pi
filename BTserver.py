@@ -22,9 +22,9 @@ right = GPIO.PWM(16, 100)
 client_sock = None
 server_sock = None
 
-fwd_command_count=0
-bck_command_count=0
 timeout = 2
+
+Popen(['sudo hciconfig hci0 pistart'], shell=True, cwd="/home/pi/mjpg-streamer")
 
 def startCamera():
     subprocess.Popen(['./mjpg-streamer.sh start'], shell=True, cwd="/home/pi/mjpg-streamer")
@@ -129,13 +129,13 @@ def restart():
                     GPIO.cleanup()
                     break
                 if data:
-                    if data == 'U'.encode(): #up start
+                    if data == 'F'.encode(): #up start
                         fwd.start(100)
-                    elif data == 'u'.encode():
+                    elif data == 'f'.encode():
                         fwd.stop()
-                    elif data == 'D'.encode(): #down start
+                    elif data == 'B'.encode(): #down start
                         bck.start(100)
-                    elif data == 'd'.encode():
+                    elif data == 'b'.encode():
                         bck.stop()
                     elif data == 'R'.encode():
                         right.start(100)
